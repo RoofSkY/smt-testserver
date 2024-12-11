@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>주문 관리 시스템</title>
+	</head>
+	<body>
+		<h1>주문 정보 입력</h1>
+		<form id="orderForm">
+			<label>주문번호:</label>
+			<input type="text" id="orderId" required /><br /><br />
+
+			<label>운영체제:</label>
+			<label
+				><input type="radio" name="os" value="Windows 10" required />
+				Windows 10</label
+			>
+			<label
+				><input type="radio" name="os" value="Windows 11" required />
+				Windows 11</label
+			><br /><br />
+
+			<label><input type="checkbox" id="radeon" /> 라데온</label><br />
+			<label><input type="checkbox" id="micron" /> 마이크론</label
+			><br /><br />
+
+			<button type="submit">저장</button>
+		</form>
+
+		<h2>저장된 데이터</h2>
+		<div id="dataList"></div>
+
+		<script>
+			document
+				.getElementById("orderForm")
+				.addEventListener("submit", async function (e) {
+					e.preventDefault();
+
+					const orderId = document.getElementById("orderId").value;
+					const os = document.querySelector(
+						'input[name="os"]:checked'
+					).value;
+					const radeon = document.getElementById("radeon").checked;
+					const micron = document.getElementById("micron").checked;
+
+					const response = await fetch("/api/save", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ orderId, os, radeon, micron }),
+					});
+
+					if (response.ok) {
+						alert("저장 완료!");
+						loadData();
+					} else {
+						alert("저장 실패!");
+					}
+				});
+
+			async function loadData() {
+				const response = await fetch("/api/orders");
+				const orders = await response.json();
+				const dataList = document.getElementById("dataList");
+				dataList.innerHTML = orders
+					.map(
+						(order) => `
+        <div>
+          <p>주문번호: ${order.order_id}</p>
+          <p>운영체제: ${order.os}</p>
+          <p>라데온: ${order.radeon ? "Yes" : "No"}</p>
+          <p>마이크론: ${order.micron ? "Yes" : "No"}</p>
+          <p>시간: ${order.created_at}</p>
+          <hr>
+        </div>
+      `
+					)
+					.join("");
+			}
+
+			loadData();
+		</script>
+	</body>
+</html>
